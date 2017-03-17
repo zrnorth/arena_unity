@@ -10,7 +10,7 @@ public class BoardManager : MonoBehaviour {
     public int height = 16;
     public int width = 16;
 
-    public int gameSize = 3; // The number of rows/cols of rooms
+    public int gameSize = 3; // Game board will be gameSize x gameSize rooms.
 
     private GameObject[,] rooms;
     private Transform boardHolder;
