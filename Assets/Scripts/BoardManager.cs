@@ -52,14 +52,40 @@ public class BoardManager : MonoBehaviour {
         Room newRoom = new GameObject().AddComponent<Room>();
         Vector2 botLeft = new Vector2(width * w, height * h);
         bool isOuterRoom = (w == 0 || w == gameSize - 1 || h == 0 || h == gameSize - 1);
+
+        // TODO the door creation logic occasionally creates islands. 
+        // Needs to be refactored to ensure every room can get to every other room.
         List<Room.Door> doors = new List<Room.Door>();
-        foreach (Room.Door d in Enum.GetValues(typeof(Room.Door))) {
+        List<Room.Door> legalDoorDirections = GetLegalDoorDirections(w, h);
+
+        foreach (Room.Door d in legalDoorDirections) {
             if (GameManager.instance.prng.Next(0, 100) < doorSpawnChance) {
                 doors.Add(d);
             }
         }
+        // If no doors were instantiated, create one in a legal position.
+        // If no legal positions, just give up
+        if (doors.Count == 0 && legalDoorDirections.Count > 0) {
+            doors.Add(legalDoorDirections[GameManager.instance.prng.Next(0, legalDoorDirections.Count)]);
+        }
 
         newRoom.Setup(floorTiles, wallTiles, botLeft, width, height, doors, isOuterRoom);
         return newRoom;
+    }
+
+    private List<Room.Door> GetLegalDoorDirections(int w, int h) {
+        List<Room.Door> legalDoorDirections = new List<Room.Door>();
+        foreach (Room.Door d in Enum.GetValues(typeof(Room.Door))) {
+            // Don't spawn doors on the edge of the game
+            if ((w == 0 && d == Room.Door.Left) ||
+                (w == gameSize - 1 && d == Room.Door.Right) ||
+                (h == 0 && d == Room.Door.Bot) ||
+                (h == gameSize - 1 && d == Room.Door.Top)) {
+                continue;
+            } else {  // legal
+                legalDoorDirections.Add(d);
+            }
+        }
+        return legalDoorDirections;
     }
 }
