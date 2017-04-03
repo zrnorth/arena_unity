@@ -13,7 +13,7 @@ public class Room : MonoBehaviour {
 
     public int width { get; set; }
     public int height { get; set; }
-    public List<Door> doors;
+    public List<Door> doors = new List<Door>();
     public bool isOuterRoom; // true if this room is on the outer rim of the grid
 
     // Actually sets up a room with its vars & instantiates it in the game world.
@@ -21,8 +21,12 @@ public class Room : MonoBehaviour {
     public void Setup(GameObject[] floorTiles, GameObject[] wallTiles, Vector2 botLeft, int _width, int _height, List<Door> _doors, bool _isOuterRoom) {
         width = _width;
         height = _height;
-        doors = _doors;
+        if (_doors != null) {
+            doors = _doors;
+        }
         isOuterRoom = _isOuterRoom;
+
+        // Position us correctly in the scene
         gameObject.transform.position = new Vector2((botLeft.x + width / 2), (botLeft.y + height / 2));
 
         // Create walls
@@ -49,7 +53,6 @@ public class Room : MonoBehaviour {
         newWallTile.transform.parent = botWall.transform;
 
         // Now, fill in the wall outline
-        // todo: render doors here based on the inputted sides
         for (int x = (int)botLeft.x + 1; x <= (int)botLeft.x + width - 1; x++) {
             // Top wall
             newWallTile = Instantiate(wallTiles[0], new Vector2(x, botLeft.y+height), Quaternion.identity);
@@ -78,6 +81,16 @@ public class Room : MonoBehaviour {
             }
         }
 
+        // TEMP: tint sides based on wall direction
+        foreach (Door d in doors) {
+            string sideName = d.ToString().ToLower() + "_wall";
+            Transform side = walls.transform.Find(sideName);
+            for(int i = 8; i < 11; i++) {
+                Transform child = side.GetChild(i);
+                child.gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
+            }
+        }
+
         // Finalize
         string roomName = "";
         if (isOuterRoom) {
@@ -86,7 +99,7 @@ public class Room : MonoBehaviour {
             roomName += "Inner_";
         }
         roomName += "Room_" + width + "x" + height;
-        if (doors != null && doors.Count > 0) {
+        if (doors.Count > 0) {
             roomName += " | Doors:";
             foreach (Door d in doors) {
                 roomName += " " + d.ToString();
