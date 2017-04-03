@@ -35,15 +35,13 @@ public class GameManager : MonoBehaviour {
     void StartGame() {
         boardManager.NewBoard();        
         // Get the room to spawn in
-        GameObject spawnRoom = boardManager.RandomRoom();
+        Room spawnRoom = boardManager.RandomRoom();
         // Get the square in the room to spawn in
-        Transform floor = spawnRoom.transform.FindChild("floor");
+        Transform floor = spawnRoom.gameObject.transform.FindChild("floor");
         int i = prng.Next(0, floor.childCount);
         Vector2 spawnPos = floor.GetChild(i).position;
 
         // Spawn the player
         Instantiate(player, spawnPos, Quaternion.identity);
-
-        // initialize scores
     }
 }

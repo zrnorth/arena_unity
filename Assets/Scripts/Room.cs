@@ -3,14 +3,26 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Room : MonoBehaviour {
+
+    public enum Door {
+        Top,
+        Left,
+        Bot,
+        Right
+    };
+
     public int width { get; set; }
     public int height { get; set; }
+    public List<Door> doors;
+    public bool isOuterRoom; // true if this room is on the outer rim of the grid
 
     // Actually sets up a room with its vars & instantiates it in the game world.
     // Basically the constructor.
-    public void Setup(GameObject[] floorTiles, GameObject[] wallTiles, Vector2 botLeft, int _width, int _height) {
+    public void Setup(GameObject[] floorTiles, GameObject[] wallTiles, Vector2 botLeft, int _width, int _height, List<Door> _doors, bool _isOuterRoom) {
         width = _width;
         height = _height;
+        doors = _doors;
+        isOuterRoom = _isOuterRoom;
         gameObject.transform.position = new Vector2((botLeft.x + width / 2), (botLeft.y + height / 2));
 
         // Create walls
@@ -37,6 +49,7 @@ public class Room : MonoBehaviour {
         newWallTile.transform.parent = botWall.transform;
 
         // Now, fill in the wall outline
+        // todo: render doors here based on the inputted sides
         for (int x = (int)botLeft.x + 1; x <= (int)botLeft.x + width - 1; x++) {
             // Top wall
             newWallTile = Instantiate(wallTiles[0], new Vector2(x, botLeft.y+height), Quaternion.identity);
@@ -66,7 +79,21 @@ public class Room : MonoBehaviour {
         }
 
         // Finalize
-        gameObject.name = "Room_" + width + "x" + height;
+        string roomName = "";
+        if (isOuterRoom) {
+            roomName += "Outer_";
+        } else {
+            roomName += "Inner_";
+        }
+        roomName += "Room_" + width + "x" + height;
+        if (doors != null && doors.Count > 0) {
+            roomName += " | Doors:";
+            foreach (Door d in doors) {
+                roomName += " " + d.ToString();
+            }
+        }
+
+        gameObject.name = roomName;
         walls.transform.parent = floor.transform.parent = gameObject.transform;
     }
 }
