@@ -50,7 +50,7 @@ public class BoardManager : MonoBehaviour {
     // Creates a new GameObject with the Room script attached, and runs the Setup script in Room.
     Room CreateNewRoom(int w, int h) {
         Room newRoom = new GameObject().AddComponent<Room>();
-        Vector2 botLeft = new Vector2(width * w, height * h);
+        Vector2 botLeft = new Vector2((width+1) * w, (height+1) * h);
         bool isOuterRoom = (w == 0 || w == gameSize - 1 || h == 0 || h == gameSize - 1);
 
         // TODO the door creation logic occasionally creates islands. 
