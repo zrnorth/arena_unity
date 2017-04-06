@@ -85,7 +85,7 @@ public class Room : MonoBehaviour {
     }
 
     public void AddDoors(List<Door> doorsToAdd) {
-        doors = doorsToAdd;
+        doors.AddRange(doorsToAdd);
         TintDoors();
         UpdateRoomName();
     }

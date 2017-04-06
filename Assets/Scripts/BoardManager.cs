@@ -40,16 +40,24 @@ public class BoardManager : MonoBehaviour {
         }
 
         // create doors
+        // First pass: Add TOP and RIGHT
         for (int w = 0; w < gameSize; w++) {
             for (int h = 0; h < gameSize; h++) {
                 List<Room.Door> doorsToAdd = new List<Room.Door>();
-                List<Room.Door> possibleDoorsForRoom = GetPossibleDoors(w, h);
+                List<Room.Door> possibleDoorsForRoom = GetPossibleNewDoors(w, h);
                 // Each door has a random chance of appearing
-                foreach(Room.Door d in possibleDoorsForRoom) {
+                foreach (Room.Door d in possibleDoorsForRoom) {
                     if (GameManager.instance.prng.Next(0, 100) < doorSpawnChance) {
                         doorsToAdd.Add(d);
                     }
                 }
+                rooms[w, h].AddDoors(doorsToAdd);
+            }
+        }
+        // Second pass: Copy over BOT and LEFT based on the results of first pass.
+        for (int w = 0; w < gameSize; w++) {
+            for (int h = 0; h < gameSize; h++) {
+                List<Room.Door> doorsToAdd = DoorsFromBotAndLeftRooms(w, h);
                 rooms[w, h].AddDoors(doorsToAdd);
             }
         }
@@ -72,10 +80,11 @@ public class BoardManager : MonoBehaviour {
         return newRoom;
     }
 
+    // First pass 
     // Returns the possible doors that could be added to a room, assuming that rooms care about UP and RIGHT doors.
     // On the right-most column, they can't have a RIGHT door.
     // On the top-most row, they can't have an UP door.
-    List<Room.Door> GetPossibleDoors(int w, int h) {
+    List<Room.Door> GetPossibleNewDoors(int w, int h) {
         List<Room.Door> possibles = new List<Room.Door>();
         if (w < gameSize - 1) {
             possibles.Add(Room.Door.Right);
@@ -84,5 +93,20 @@ public class BoardManager : MonoBehaviour {
             possibles.Add(Room.Door.Top);
         }
         return possibles;
+    }
+
+    // This returns a list of doors that we need for the second "pass."
+    // Assuming we have filled in the room array with TOP / RIGHT doors randomly, 
+    // we copy over those door values to the other rooms so they all match up with
+    // corresponding BOT / LEFT doors.
+    List<Room.Door> DoorsFromBotAndLeftRooms(int w, int h) {
+        List<Room.Door> doors = new List<Room.Door>();
+        if (w > 0 && rooms[w-1, h].doors.Contains(Room.Door.Right)) {
+            doors.Add(Room.Door.Left);
+        }
+        if (h > 0 && rooms[w, h - 1].doors.Contains(Room.Door.Top)) {
+            doors.Add(Room.Door.Bot);
+        }
+        return doors;
     }
 }
