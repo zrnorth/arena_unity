@@ -16,14 +16,12 @@ public class Room : MonoBehaviour {
     public List<Door> doors = new List<Door>();
     public bool isOuterRoom; // true if this room is on the outer rim of the grid
 
+
     // Actually sets up a room with its vars & instantiates it in the game world.
-    // Basically the constructor.
-    public void Setup(GameObject[] floorTiles, GameObject[] wallTiles, Vector2 botLeft, int _width, int _height, List<Door> _doors, bool _isOuterRoom) {
+    // At first, rooms are made without doors. Uses AddDoor() to add them after this is run.
+    public void Setup(GameObject[] floorTiles, GameObject[] wallTiles, Vector2 botLeft, int _width, int _height, bool _isOuterRoom) {
         width = _width;
         height = _height;
-        if (_doors != null) {
-            doors = _doors;
-        }
         isOuterRoom = _isOuterRoom;
 
         // Position us correctly in the scene
@@ -40,13 +38,13 @@ public class Room : MonoBehaviour {
         GameObject newWallTile;
 
         // first, the corners
-        newWallTile = Instantiate(wallTiles[4], new Vector2(botLeft.x, botLeft.y+height), Quaternion.identity); // Top left
+        newWallTile = Instantiate(wallTiles[4], new Vector2(botLeft.x, botLeft.y + height), Quaternion.identity); // Top left
         newWallTile.transform.parent = topWall.transform;
 
-        newWallTile = Instantiate(wallTiles[5], new Vector2(botLeft.x+width, botLeft.y+height), Quaternion.identity); // Top right
+        newWallTile = Instantiate(wallTiles[5], new Vector2(botLeft.x + width, botLeft.y + height), Quaternion.identity); // Top right
         newWallTile.transform.parent = topWall.transform;
 
-        newWallTile = Instantiate(wallTiles[6], new Vector2(botLeft.x+width, botLeft.y), Quaternion.identity); // bot right
+        newWallTile = Instantiate(wallTiles[6], new Vector2(botLeft.x + width, botLeft.y), Quaternion.identity); // bot right
         newWallTile.transform.parent = botWall.transform;
 
         newWallTile = Instantiate(wallTiles[7], new Vector2(botLeft.x, botLeft.y), Quaternion.identity); // bot left
@@ -55,7 +53,7 @@ public class Room : MonoBehaviour {
         // Now, fill in the wall outline
         for (int x = (int)botLeft.x + 1; x <= (int)botLeft.x + width - 1; x++) {
             // Top wall
-            newWallTile = Instantiate(wallTiles[0], new Vector2(x, botLeft.y+height), Quaternion.identity);
+            newWallTile = Instantiate(wallTiles[0], new Vector2(x, botLeft.y + height), Quaternion.identity);
             newWallTile.transform.parent = topWall.transform;
 
             // Bot wall
@@ -68,7 +66,7 @@ public class Room : MonoBehaviour {
             newWallTile = Instantiate(wallTiles[1], new Vector2(botLeft.x, y), Quaternion.identity);
             newWallTile.transform.parent = leftWall.transform;
             // Right wall
-            newWallTile = Instantiate(wallTiles[3], new Vector2(botLeft.x+width, y), Quaternion.identity);
+            newWallTile = Instantiate(wallTiles[3], new Vector2(botLeft.x + width, y), Quaternion.identity);
             newWallTile.transform.parent = rightWall.transform;
         }
 
@@ -81,17 +79,31 @@ public class Room : MonoBehaviour {
             }
         }
 
-        // TEMP: tint sides based on wall direction
+        // Finalize
+        walls.transform.parent = floor.transform.parent = gameObject.transform;
+        UpdateRoomName();
+    }
+
+    public void AddDoors(List<Door> doorsToAdd) {
+        doors = doorsToAdd;
+        TintDoors();
+        UpdateRoomName();
+    }
+
+    // DEBUG tints the doors blue
+    private void TintDoors() {
+        Transform walls = gameObject.transform.Find("walls");
         foreach (Door d in doors) {
             string sideName = d.ToString().ToLower() + "_wall";
             Transform side = walls.transform.Find(sideName);
-            for(int i = 8; i < 11; i++) {
-                Transform child = side.GetChild(i);
-                child.gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
+            for (int i = 8; i < 11; i++) {
+                side.GetChild(i).gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
             }
         }
+    }
 
-        // Finalize
+    // Changes the room game object's name to reflect its current state
+    private void UpdateRoomName() {
         string roomName = "";
         if (isOuterRoom) {
             roomName += "Outer_";
@@ -107,6 +119,5 @@ public class Room : MonoBehaviour {
         }
 
         gameObject.name = roomName;
-        walls.transform.parent = floor.transform.parent = gameObject.transform;
     }
 }
