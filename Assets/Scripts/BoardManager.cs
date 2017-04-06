@@ -61,6 +61,9 @@ public class BoardManager : MonoBehaviour {
                 rooms[w, h].AddDoors(doorsToAdd);
             }
         }
+
+        // Ensure every room is reachable. If not, need to connect them somehow
+        Debug.Log(EnsureReachability());
     }
 
     // Helper function. Returns a random room in the game.
@@ -108,5 +111,66 @@ public class BoardManager : MonoBehaviour {
             doors.Add(Room.Door.Bot);
         }
         return doors;
+    }
+
+    private bool EnsureReachability() {
+        // Simple BFS to ensure every room is reachable.
+        HashSet<string> visited = new HashSet<string>();
+        Queue<Pair> q = new Queue<Pair>();
+        q.Enqueue(new Pair(0, 0));
+
+        int x = 0;
+
+        while (x < 100 && q.Count > 0) {
+            x++;
+            Pair coords = q.Dequeue();
+
+            if (visited.Contains(coords.ToString())) {
+                continue;
+            }
+
+            visited.Add(coords.ToString());
+
+            Room queuedRoom = rooms[coords.w, coords.h];
+            queuedRoom.TintFloor(Color.green); // Tint as you go
+
+            foreach (Room.Door door in queuedRoom.doors) {
+                Pair p = new Pair(-1, -1);
+
+                switch (door) {
+                    case Room.Door.Top:
+                        p = new Pair(coords.w, coords.h + 1);
+                        break;
+                    case Room.Door.Bot:
+                        p = new Pair(coords.w, coords.h - 1);
+                        break;
+                    case Room.Door.Left:
+                        p = new Pair(coords.w - 1, coords.h);
+                        break;
+                    case Room.Door.Right:
+                        p = new Pair(coords.w + 1, coords.h);
+                        break;
+                }
+                if (p.w == -1) { // no doors
+                    continue;
+                }
+                if (!visited.Contains(p.ToString())) {
+                    q.Enqueue(p);
+                }
+            }
+        }
+        return visited.Count == rooms.Length;
+    }
+
+    class Pair {
+        public int w;
+        public int h;
+        public Pair(int _w, int _h) {
+            w = _w;
+            h = _h;
+        }
+        public override string ToString() {
+            return w + ", " + h;
+        }
     }
 }

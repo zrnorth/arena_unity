@@ -102,6 +102,14 @@ public class Room : MonoBehaviour {
         }
     }
 
+    // DEBUG tints the floor
+    public void TintFloor(Color c) {
+        Transform floor = gameObject.transform.Find("floor");
+        for (int i = 0; i < floor.childCount; i++) {
+            floor.GetChild(i).gameObject.GetComponent<SpriteRenderer>().color = c;
+        }
+    }
+
     // Changes the room game object's name to reflect its current state
     private void UpdateRoomName() {
         string roomName = "";
