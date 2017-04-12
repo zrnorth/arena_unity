@@ -115,18 +115,20 @@ public class BoardManager : MonoBehaviour {
 
     private bool EnsureReachability() {
         // Simple BFS to ensure every room is reachable.
-        HashSet<string> visited = new HashSet<string>();
+        HashSet<Pair> visited = new HashSet<Pair>();
         Queue<Pair> q = new Queue<Pair>();
-        q.Enqueue(new Pair(0, 0));
+        q.Enqueue(new Pair(0, 0)); // Start with the bot-left room.
 
-        while (q.Count > 0) {
+        int x = 0;
+        while (q.Count > 0 && x < 100) {
+            x++;
             Pair coords = q.Dequeue();
 
-            if (visited.Contains(coords.ToString())) {
+            if (visited.Contains(coords)) {
                 continue;
             }
 
-            visited.Add(coords.ToString());
+            visited.Add(coords);
 
             Room queuedRoom = rooms[coords.w, coords.h];
             queuedRoom.TintFloor(Color.green); // Tint as you go
@@ -151,7 +153,7 @@ public class BoardManager : MonoBehaviour {
                 if (coordsToEnqueue.w == -1) { // no doors
                     continue;
                 }
-                if (!visited.Contains(coordsToEnqueue.ToString())) {
+                if (!visited.Contains(coordsToEnqueue)) {
                     q.Enqueue(coordsToEnqueue);
                 }
             }
@@ -159,15 +161,28 @@ public class BoardManager : MonoBehaviour {
         return visited.Count == rooms.Length;
     }
 
-    class Pair {
+    // Helper class, stores a pair of integers in a single object.
+    class Pair : IEquatable<Pair> {
         public int w;
         public int h;
         public Pair(int _w, int _h) {
             w = _w;
             h = _h;
         }
-        public override string ToString() {
-            return w + ", " + h;
+        public override int GetHashCode() {
+            string s = w + ", " + h;
+            return s.GetHashCode();
+        }
+        public override bool Equals(object obj) {
+            Pair other = obj as Pair;
+            if (other == null) {
+                return false;
+            }
+            return Equals(other);
+        }
+
+        public bool Equals(Pair other) {
+            return this.w == other.w && this.h == other.h;
         }
     }
 }
