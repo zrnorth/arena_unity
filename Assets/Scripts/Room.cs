@@ -35,47 +35,32 @@ public class Room : MonoBehaviour {
         GameObject walls = new GameObject("walls");
         topWall.transform.parent = botWall.transform.parent = leftWall.transform.parent = rightWall.transform.parent = walls.transform;
 
-        GameObject newWallTile;
-
         // first, the corners
-        newWallTile = Instantiate(wallTiles[4], new Vector2(botLeft.x, botLeft.y + height), Quaternion.identity); // Top left
-        newWallTile.transform.parent = topWall.transform;
-
-        newWallTile = Instantiate(wallTiles[5], new Vector2(botLeft.x + width, botLeft.y + height), Quaternion.identity); // Top right
-        newWallTile.transform.parent = topWall.transform;
-
-        newWallTile = Instantiate(wallTiles[6], new Vector2(botLeft.x + width, botLeft.y), Quaternion.identity); // bot right
-        newWallTile.transform.parent = botWall.transform;
-
-        newWallTile = Instantiate(wallTiles[7], new Vector2(botLeft.x, botLeft.y), Quaternion.identity); // bot left
-        newWallTile.transform.parent = botWall.transform;
+        CreateTile(wallTiles[4], new Vector2(botLeft.x, botLeft.y + height), topWall.transform); // Top left
+        CreateTile(wallTiles[5], new Vector2(botLeft.x + width, botLeft.y + height), topWall.transform); // Top right
+        CreateTile(wallTiles[6], new Vector2(botLeft.x + width, botLeft.y), botWall.transform); // bot right
+        CreateTile(wallTiles[7], new Vector2(botLeft.x, botLeft.y), botWall.transform); // bot left
 
         // Now, fill in the wall outline
         for (int x = (int)botLeft.x + 1; x <= (int)botLeft.x + width - 1; x++) {
             // Top wall
-            newWallTile = Instantiate(wallTiles[0], new Vector2(x, botLeft.y + height), Quaternion.identity);
-            newWallTile.transform.parent = topWall.transform;
-
+            CreateTile(wallTiles[0], new Vector2(x, botLeft.y + height), topWall.transform);
             // Bot wall
-            newWallTile = Instantiate(wallTiles[2], new Vector2(x, botLeft.y), Quaternion.identity);
-            newWallTile.transform.parent = botWall.transform;
+            CreateTile(wallTiles[2], new Vector2(x, botLeft.y), botWall.transform);
         }
 
         for (int y = (int)botLeft.y + 1; y <= (int)botLeft.y + height - 1; y++) {
             // Left wall
-            newWallTile = Instantiate(wallTiles[1], new Vector2(botLeft.x, y), Quaternion.identity);
-            newWallTile.transform.parent = leftWall.transform;
+            CreateTile(wallTiles[1], new Vector2(botLeft.x, y), leftWall.transform);
             // Right wall
-            newWallTile = Instantiate(wallTiles[3], new Vector2(botLeft.x + width, y), Quaternion.identity);
-            newWallTile.transform.parent = rightWall.transform;
+            CreateTile(wallTiles[3], new Vector2(botLeft.x + width, y), rightWall.transform);
         }
 
         // Fill out the floor
         GameObject floor = new GameObject("floor");
         for (int x = (int)botLeft.x + 1; x <= (int)botLeft.x + width - 1; x++) {
             for (int y = (int)botLeft.y + 1; y <= (int)botLeft.y + height - 1; y++) {
-                GameObject newFloorTile = Instantiate(floorTiles[Random.Range(0, floorTiles.Length)], new Vector2(x, y), Quaternion.identity);
-                newFloorTile.transform.parent = floor.transform;
+                CreateTile(floorTiles[Random.Range(0, floorTiles.Length)], new Vector2(x, y), floor.transform);
             }
         }
 
@@ -84,9 +69,15 @@ public class Room : MonoBehaviour {
         UpdateRoomName();
     }
 
+    GameObject CreateTile(GameObject tilePrefab, Vector3 position, Transform parent) {
+        GameObject newTile = Instantiate(tilePrefab, position, Quaternion.identity);
+        newTile.transform.parent = parent;
+        return newTile;
+    }
+
     public void AddDoors(List<Door> doorsToAdd) {
         doors.AddRange(doorsToAdd);
-        TintDoors();
+        //TintDoors();
         UpdateRoomName();
     }
 
@@ -96,7 +87,7 @@ public class Room : MonoBehaviour {
         foreach (Door d in doors) {
             string sideName = d.ToString().ToLower() + "_wall";
             Transform side = walls.transform.Find(sideName);
-            for (int i = 8; i < 11; i++) {
+            for (int i = 4; i < 10; i++) {
                 side.GetChild(i).gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
             }
         }

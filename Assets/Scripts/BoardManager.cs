@@ -62,8 +62,9 @@ public class BoardManager : MonoBehaviour {
             }
         }
 
-        // Ensure every room is reachable. If not, need to connect them somehow
-        Debug.Log(EnsureReachability());
+        // Ensure every room is reachable. If not, TODO connect them somehow
+        Pair start = new Pair(0, 0);
+        Debug.Log(EnsureReachability(start));
     }
 
     // Helper function. Returns a random room in the game.
@@ -113,11 +114,11 @@ public class BoardManager : MonoBehaviour {
         return doors;
     }
 
-    private bool EnsureReachability() {
+    private bool EnsureReachability(Pair start) {
         // Simple BFS to ensure every room is reachable.
         HashSet<Pair> visited = new HashSet<Pair>();
         Queue<Pair> q = new Queue<Pair>();
-        q.Enqueue(new Pair(0, 0)); // Start with the bot-left room.
+        q.Enqueue(start); // Start with the bot-left room.
 
         int x = 0;
         while (q.Count > 0 && x < 100) {
