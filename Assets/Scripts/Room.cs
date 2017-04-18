@@ -17,6 +17,10 @@ public class Room : MonoBehaviour {
     public bool isOuterRoom; // true if this room is on the outer rim of the grid
     public Pair boardCoords { get; set; } // Position on the board in terms of rooms
 
+    private Transform wallsTransform; // also holds any doors
+    private Transform floorTransform;
+    private Transform cornersTransform;
+
 
     // Actually sets up a room with its vars & instantiates it in the game world.
     // At first, rooms are made without doors. Uses AddDoor() to add them after this is run.
@@ -29,45 +33,49 @@ public class Room : MonoBehaviour {
         // Position us correctly in the scene
         gameObject.transform.position = new Vector2((botLeft.x + width / 2), (botLeft.y + height / 2));
 
-        // Create walls
-        GameObject topWall = new GameObject("top_wall");
-        GameObject botWall = new GameObject("bot_wall");
-        GameObject leftWall = new GameObject("left_wall");
-        GameObject rightWall = new GameObject("right_wall");
-        GameObject walls = new GameObject("walls");
-        topWall.transform.parent = botWall.transform.parent = leftWall.transform.parent = rightWall.transform.parent = walls.transform;
+        // Create our sub-transforms to stay organized
+        wallsTransform = new GameObject("walls").transform;
+        floorTransform = new GameObject("floor").transform;
+        cornersTransform = new GameObject("corners").transform;
+
+        // Create the walls
+        Transform topWallTransform = new GameObject("top_wall").transform;
+        Transform botWallTransform = new GameObject("bot_wall").transform;
+        Transform leftWallTransform = new GameObject("left_wall").transform;
+        Transform rightWallTransform = new GameObject("right_wall").transform;
+
+        topWallTransform.parent = botWallTransform.parent = leftWallTransform.parent = rightWallTransform.parent = wallsTransform;
 
         // first, the corners
-        CreateTile(wallTiles[4], new Vector2(botLeft.x, botLeft.y + height), topWall.transform); // Top left
-        CreateTile(wallTiles[5], new Vector2(botLeft.x + width, botLeft.y + height), topWall.transform); // Top right
-        CreateTile(wallTiles[6], new Vector2(botLeft.x + width, botLeft.y), botWall.transform); // bot right
-        CreateTile(wallTiles[7], new Vector2(botLeft.x, botLeft.y), botWall.transform); // bot left
+        CreateTile(wallTiles[4], new Vector2(botLeft.x, botLeft.y + height), cornersTransform); // Top left
+        CreateTile(wallTiles[5], new Vector2(botLeft.x + width, botLeft.y + height), cornersTransform); // Top right
+        CreateTile(wallTiles[6], new Vector2(botLeft.x + width, botLeft.y), cornersTransform); // bot right
+        CreateTile(wallTiles[7], new Vector2(botLeft.x, botLeft.y), cornersTransform); // bot left
 
         // Now, fill in the wall outline
         for (int x = (int)botLeft.x + 1; x <= (int)botLeft.x + width - 1; x++) {
             // Top wall
-            CreateTile(wallTiles[0], new Vector2(x, botLeft.y + height), topWall.transform);
+            CreateTile(wallTiles[0], new Vector2(x, botLeft.y + height), topWallTransform);
             // Bot wall
-            CreateTile(wallTiles[2], new Vector2(x, botLeft.y), botWall.transform);
+            CreateTile(wallTiles[2], new Vector2(x, botLeft.y), botWallTransform);
         }
 
         for (int y = (int)botLeft.y + 1; y <= (int)botLeft.y + height - 1; y++) {
             // Left wall
-            CreateTile(wallTiles[1], new Vector2(botLeft.x, y), leftWall.transform);
+            CreateTile(wallTiles[1], new Vector2(botLeft.x, y), leftWallTransform);
             // Right wall
-            CreateTile(wallTiles[3], new Vector2(botLeft.x + width, y), rightWall.transform);
+            CreateTile(wallTiles[3], new Vector2(botLeft.x + width, y), rightWallTransform);
         }
 
         // Fill out the floor
-        GameObject floor = new GameObject("floor");
         for (int x = (int)botLeft.x + 1; x <= (int)botLeft.x + width - 1; x++) {
             for (int y = (int)botLeft.y + 1; y <= (int)botLeft.y + height - 1; y++) {
-                CreateTile(floorTiles[Random.Range(0, floorTiles.Length)], new Vector2(x, y), floor.transform);
+                CreateTile(floorTiles[Random.Range(0, floorTiles.Length)], new Vector2(x, y), floorTransform);
             }
         }
 
         // Finalize
-        walls.transform.parent = floor.transform.parent = gameObject.transform;
+        wallsTransform.parent = floorTransform.parent = cornersTransform.parent = gameObject.transform;
         UpdateRoomName();
     }
 
@@ -79,25 +87,22 @@ public class Room : MonoBehaviour {
 
     public void AddDoor(Door doorToAdd) {
         doors.Add(doorToAdd);
-        TintDoors(); //debug
+        HandleDoors(); 
         UpdateRoomName();
     }
 
     public void AddDoors(HashSet<Door> doorsToAdd) {
         doors.UnionWith(doorsToAdd);
-        TintDoors(); //debug
+        HandleDoors(); 
         UpdateRoomName();
     }
 
-    // DEBUG tints the doors blue
-    private void TintDoors() {
-        Transform walls = gameObject.transform.Find("walls");
+    // Renders doors on each wall (if they exist)
+    void HandleDoors() {
         foreach (Door d in doors) {
             string sideName = d.ToString().ToLower() + "_wall";
-            Transform side = walls.transform.Find(sideName);
-            for (int i = 4; i < 10; i++) {
-                side.GetChild(i).gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
-            }
+            Transform side = wallsTransform.Find(sideName);
+            side.GetChild(9).gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
         }
     }
 
@@ -110,7 +115,7 @@ public class Room : MonoBehaviour {
     }
 
     // Changes the room game object's name to reflect its current state
-    private void UpdateRoomName() {
+    void UpdateRoomName() {
         string roomName = "";
         if (isOuterRoom) {
             roomName += "Outer_";
