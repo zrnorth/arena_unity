@@ -13,16 +13,18 @@ public class Room : MonoBehaviour {
 
     public int width { get; set; }
     public int height { get; set; }
-    public List<Door> doors = new List<Door>();
+    public HashSet<Door> doors = new HashSet<Door>();
     public bool isOuterRoom; // true if this room is on the outer rim of the grid
+    public Pair boardCoords { get; set; } // Position on the board in terms of rooms
 
 
     // Actually sets up a room with its vars & instantiates it in the game world.
     // At first, rooms are made without doors. Uses AddDoor() to add them after this is run.
-    public void Setup(GameObject[] floorTiles, GameObject[] wallTiles, Vector2 botLeft, int _width, int _height, bool _isOuterRoom) {
+    public void Setup(GameObject[] floorTiles, GameObject[] wallTiles, Vector2 botLeft, int _width, int _height, bool _isOuterRoom, Pair _boardCoords) {
         width = _width;
         height = _height;
         isOuterRoom = _isOuterRoom;
+        boardCoords = _boardCoords;
 
         // Position us correctly in the scene
         gameObject.transform.position = new Vector2((botLeft.x + width / 2), (botLeft.y + height / 2));
@@ -75,9 +77,15 @@ public class Room : MonoBehaviour {
         return newTile;
     }
 
-    public void AddDoors(List<Door> doorsToAdd) {
-        doors.AddRange(doorsToAdd);
-        //TintDoors();
+    public void AddDoor(Door doorToAdd) {
+        doors.Add(doorToAdd);
+        TintDoors(); //debug
+        UpdateRoomName();
+    }
+
+    public void AddDoors(HashSet<Door> doorsToAdd) {
+        doors.UnionWith(doorsToAdd);
+        TintDoors(); //debug
         UpdateRoomName();
     }
 
