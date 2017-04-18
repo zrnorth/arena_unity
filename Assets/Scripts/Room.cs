@@ -114,10 +114,12 @@ public class Room : MonoBehaviour {
             }
             Transform side = wallsTransform.Find(d.ToString().ToLower() + "_wall");
             int middleIndex = Mathf.FloorToInt((side.childCount - 1) / 2);
-            GameObject wallToReplace = side.GetChild(middleIndex).gameObject;
-            GameObject doorTile = CreateTile(floorTiles[0], wallToReplace.transform.position, side);
-            Destroy(wallToReplace);
-            doorTile.transform.SetSiblingIndex(middleIndex);
+            for (int i = middleIndex - 1; i <= middleIndex + 1; i++) {
+                GameObject wallToReplace = side.GetChild(i).gameObject;
+                GameObject doorTile = CreateTile(floorTiles[0], wallToReplace.transform.position, side);
+                doorTile.transform.SetSiblingIndex(i);
+                DestroyImmediate(wallToReplace);
+            }
             handledDoors.Add(d);
         }
     }
