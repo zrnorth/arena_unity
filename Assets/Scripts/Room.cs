@@ -17,9 +17,16 @@ public class Room : MonoBehaviour {
     public bool isOuterRoom; // true if this room is on the outer rim of the grid
     public Pair boardCoords { get; set; } // Position on the board in terms of rooms
 
+    // sub-transforms, for organizing 
     private Transform wallsTransform; // also holds any doors
     private Transform floorTransform;
     private Transform cornersTransform;
+
+    // If we have already rendered a door don't attempt to render it again
+    private HashSet<Door> handledDoors = new HashSet<Door>();
+
+    // temp, for rendering doors
+    private GameObject[] floorTiles;
 
 
     // Actually sets up a room with its vars & instantiates it in the game world.
@@ -29,6 +36,8 @@ public class Room : MonoBehaviour {
         height = _height;
         isOuterRoom = _isOuterRoom;
         boardCoords = _boardCoords;
+        // temp
+        this.floorTiles = floorTiles;
 
         // Position us correctly in the scene
         gameObject.transform.position = new Vector2((botLeft.x + width / 2), (botLeft.y + height / 2));
@@ -100,9 +109,16 @@ public class Room : MonoBehaviour {
     // Renders doors on each wall (if they exist)
     void HandleDoors() {
         foreach (Door d in doors) {
-            string sideName = d.ToString().ToLower() + "_wall";
-            Transform side = wallsTransform.Find(sideName);
-            side.GetChild(9).gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
+            if (handledDoors.Contains(d)) {
+                continue;
+            }
+            Transform side = wallsTransform.Find(d.ToString().ToLower() + "_wall");
+            int middleIndex = Mathf.FloorToInt((side.childCount - 1) / 2);
+            GameObject wallToReplace = side.GetChild(middleIndex).gameObject;
+            GameObject doorTile = CreateTile(floorTiles[0], wallToReplace.transform.position, side);
+            Destroy(wallToReplace);
+            doorTile.transform.SetSiblingIndex(middleIndex);
+            handledDoors.Add(d);
         }
     }
 
