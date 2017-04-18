@@ -45,6 +45,7 @@ public class BoardManager : MonoBehaviour {
         centerRoomIndex = new Pair(GameManager.instance.prng.Next(1, gameSize - 1), 
                                    GameManager.instance.prng.Next(1, gameSize - 1));
         centerRoom = GetRoomFromIndex(centerRoomIndex);
+        centerRoom.TintFloor(Color.black); // debug
 
         // The center room should have doors on all four sides
         AddDoorsToRoom(centerRoomIndex, new HashSet<Room.Door> { Room.Door.Top, Room.Door.Left, Room.Door.Bot, Room.Door.Right });
@@ -105,7 +106,9 @@ public class BoardManager : MonoBehaviour {
             visited.Add(coords);
 
             Room queuedRoom = GetRoomFromIndex(coords);
-            queuedRoom.TintFloor(Color.green); // debug, Tint as you go
+            if (coords != centerRoomIndex) {
+                queuedRoom.TintFloor(Color.green); // debug, Tint as you go
+            }
 
             foreach (Room.Door door in queuedRoom.doors) {
                 Pair coordsToEnqueue = new Pair(-1, -1);
