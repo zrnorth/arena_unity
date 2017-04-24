@@ -26,19 +26,18 @@ public class Room : MonoBehaviour {
     // If we have already rendered a door don't attempt to render it again
     private HashSet<Door> handledDoors = new HashSet<Door>();
 
-    // temp, for rendering doors
-    private GameObject[] floorTiles;
+    private GameObject[] doorTiles;
+
 
 
     // Actually sets up a room with its vars & instantiates it in the game world.
     // At first, rooms are made without doors. Uses AddDoor() to add them after this is run.
-    public void Setup(GameObject[] floorTiles, GameObject[] wallTiles, Vector2 botLeft, int _width, int _height, bool _isOuterRoom, Pair _boardCoords) {
+    public void Setup(GameObject[] floorTiles, GameObject[] wallTiles, GameObject[] doorTiles, Vector2 botLeft, int _width, int _height, bool _isOuterRoom, Pair _boardCoords) {
         width = _width;
         height = _height;
         isOuterRoom = _isOuterRoom;
         boardCoords = _boardCoords;
-        // temp
-        this.floorTiles = floorTiles;
+        this.doorTiles = doorTiles;
 
         // Position us correctly in the scene
         gameObject.transform.position = new Vector2((botLeft.x + width / 2), (botLeft.y + height / 2));
@@ -90,7 +89,7 @@ public class Room : MonoBehaviour {
     }
 
     GameObject CreateTile(GameObject tilePrefab, Vector3 position, Transform parent) {
-        GameObject newTile = Instantiate(tilePrefab, position, Quaternion.identity);
+        GameObject newTile = Instantiate(tilePrefab, position, tilePrefab.transform.rotation);
         newTile.transform.parent = parent;
         return newTile;
     }
@@ -121,12 +120,29 @@ public class Room : MonoBehaviour {
             int middleIndex = Mathf.FloorToInt((side.childCount - 1) / 2);
             for (int i = middleIndex - 1; i <= middleIndex + 1; i++) {
                 GameObject wallToReplace = side.GetChild(i).gameObject;
-                GameObject doorTile = CreateTile(floorTiles[0], wallToReplace.transform.position, side);
+                GameObject doorTile = CreateTile(doorTiles[GetDoorPrefabIndex(d)], wallToReplace.transform.position, side);
                 doorTile.transform.SetSiblingIndex(i);
                 DestroyImmediate(wallToReplace);
             }
             handledDoors.Add(d);
         }
+    }
+
+    // Get the index into DoorTiles[] for the given direction
+    int GetDoorPrefabIndex(Door dir) {
+        switch (dir) {
+            case Door.NULL:
+                return -1;
+            case Door.Top:
+                return 0;
+            case Door.Left:
+                return 2;
+            case Door.Bot:
+                return 4;
+            case Door.Right:
+                return 6;
+        }
+        return -1;
     }
 
     // DEBUG tints the floor

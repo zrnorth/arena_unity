@@ -7,7 +7,8 @@ public class BoardManager : MonoBehaviour {
     public GameObject[] floorTiles; // Floor prefabs
     [Tooltip("TOP, LEFT, BOT, RIGHT, TOPLEFT, TOPRIGHT, BOTRIGHT, BOTLEFT")]
     public GameObject[] wallTiles; // Wall prefabs. Order matters!
-    public GameObject[] doorTiles; // Door prefabs
+    [Tooltip("TOP_CLOSED, TOP_OPEN, LEFT_CLOSED, LEFT_OPEN, BOT_CLOSED, BOT_OPEN, RIGHT_CLOSED, RIGHT_OPEN")]
+    public GameObject[] doorTiles; // Door prefabs. Order matters!
     
     public int height = 16; // Standard room height
     public int width = 16; // Standard room width
@@ -47,19 +48,16 @@ public class BoardManager : MonoBehaviour {
 
         // Set one room as the "center" or root room. Can't be a room on the outer edge.
         centerRoomCoords = new Pair(GameManager.instance.prng.Next(1, gameSize - 1), 
-                                   GameManager.instance.prng.Next(1, gameSize - 1));
+                                    GameManager.instance.prng.Next(1, gameSize - 1));
         centerRoom = GetRoomFromCoords(centerRoomCoords);
         centerRoom.TintFloor(Color.black); // debug
 
         // The center room should have doors on all four sides
         AddDoorsToRoom(centerRoomCoords, new HashSet<Room.Door> { Room.Door.Top, Room.Door.Left, Room.Door.Bot, Room.Door.Right });
-        Debug.Log("Center room: " + centerRoomCoords);
-
         // Do a pass over the board, adding rooms by % chance
         PopulateBoardWithRandomDoors();
         // Connect the remaining unconnected rooms to the center region.
         ConnectAllDoorsToCenter();
-
         // Finished!
         Summarize();
     }
@@ -70,8 +68,6 @@ public class BoardManager : MonoBehaviour {
         int y = GameManager.instance.prng.Next(0, gameSize);
         return rooms[x, y];
     }
-
-
 
     // Randomly adds a room at each possible intersection based on the specified % chance.
     void PopulateBoardWithRandomDoors() {
@@ -190,6 +186,7 @@ public class BoardManager : MonoBehaviour {
     // Logs a summary of the generated board. Helper for NewBoard()
     void Summarize() {
         string s = "Generated board! Statistics:";
+        s += "\n*  Center room coords: " + centerRoomCoords.ToString();
         s += "\n*  Number of doors: " + numDoors;
 
         int maxNumberPossibleDoors = 2 * gameSize * (gameSize - 1);
@@ -329,7 +326,7 @@ public class BoardManager : MonoBehaviour {
         Vector2 botLeft = new Vector2((width+1) * w, (height+1) * h);
         bool isOuterRoom = (w == 0 || w == gameSize - 1 || h == 0 || h == gameSize - 1);
 
-        newRoom.Setup(floorTiles, wallTiles, botLeft, width, height, isOuterRoom, new Pair(w, h));
+        newRoom.Setup(floorTiles, wallTiles, doorTiles, botLeft, width, height, isOuterRoom, new Pair(w, h));
         return newRoom;
     }
 
