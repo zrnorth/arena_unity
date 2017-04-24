@@ -44,4 +44,19 @@ public class GameManager : MonoBehaviour {
         // Spawn the player
         Instantiate(player, spawnPos, Quaternion.identity);
     }
+
+    // Helper function - gets a single random T from a HashSet using the game's prng.
+    public static T GetRandom<T>(HashSet<T> hs) {
+        T result = default(T);
+        int x = instance.prng.Next(0, hs.Count);
+        int i = 0;
+        foreach (T t in hs) {
+            if (i == x) {
+                result = t;
+                break;
+            }
+            i++;
+        }
+        return result;
+    }
 }

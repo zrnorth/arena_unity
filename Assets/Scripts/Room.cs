@@ -5,6 +5,7 @@ using UnityEngine;
 public class Room : MonoBehaviour {
 
     public enum Door {
+        NULL, // for error states
         Top,
         Left,
         Bot,
@@ -95,15 +96,19 @@ public class Room : MonoBehaviour {
     }
 
     public void AddDoor(Door doorToAdd) {
-        doors.Add(doorToAdd);
-        HandleDoors(); 
-        UpdateRoomName();
+        if (doorToAdd != Door.NULL) {
+            doors.Add(doorToAdd);
+            HandleDoors();
+            UpdateRoomName();
+        }
     }
 
     public void AddDoors(HashSet<Door> doorsToAdd) {
-        doors.UnionWith(doorsToAdd);
-        HandleDoors(); 
-        UpdateRoomName();
+        if (!doorsToAdd.Contains(Door.NULL)) {
+            doors.UnionWith(doorsToAdd);
+            HandleDoors();
+            UpdateRoomName();
+        }
     }
 
     // Renders doors on each wall (if they exist)
