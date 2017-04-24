@@ -20,6 +20,9 @@ public class BoardManager : MonoBehaviour {
     private Pair centerRoomIndex;
     private Transform boardHolder;
 
+    //debug
+    private int numDoors = 0;
+
     public void NewBoard() {
         // Clear the old board if it exists
         if (boardHolder != null) {
@@ -54,22 +57,48 @@ public class BoardManager : MonoBehaviour {
         // Do a pass over the board, adding rooms by % chance
         PopulateBoardWithRandomDoors();
 
-        // Do a spread fill to see which rooms are reachable from the center room. If some aren't reachable, keep adding doors til they are.
+        // Do a spread fill to see which rooms are reachable from the center room.
         List<Pair> reachableRoomsFromCenter = GetAllReachableRoomIndices(centerRoomIndex);
+        // We only want to add doors to the "frontier" rooms - the rooms which are adjacent to unconnected ones.
+        List<Pair> frontierRooms = GetFrontierRooms(reachableRoomsFromCenter);
         int numRooms = gameSize * gameSize;
-        int x = 0;
-        while (reachableRoomsFromCenter.Count < numRooms && x < 100) {
-            Debug.Log("Pass " + x);
-            x++; // debug so we can't loop forever
+        int passes = 0;
+        while (reachableRoomsFromCenter.Count < numRooms && passes < 100) {
+            Debug.Log("Pass " + passes);
+            passes++; // debug so we can't loop forever
 
             // Pick a random room, and add a door to it, then re-calculate
-            bool succeeded = AddRandomDoors(reachableRoomsFromCenter, 1);
+            bool succeeded = AddRandomDoors(frontierRooms, 1);
             // If we failed to add a room, something went wrong. Just break
             if (!succeeded) {
                 break;
             }
             reachableRoomsFromCenter = GetAllReachableRoomIndices(centerRoomIndex);
+            frontierRooms = GetFrontierRooms(reachableRoomsFromCenter);
         }
+        // Finished!
+        Summarize(passes);
+    }
+
+    // Get a random room in the game.
+    public Room RandomRoom() {
+        int x = GameManager.instance.prng.Next(0, gameSize);
+        int y = GameManager.instance.prng.Next(0, gameSize);
+        return rooms[x, y];
+    }
+
+    // Logs a summary of the generated board
+    void Summarize(int passes) {
+        string s = "Generated board!";
+        s += "\nStatistics: ";
+        s += "\n*  Door fill passes: " + passes;
+        s += "\n*  Number of doors: " + numDoors;
+
+        int maxNumberPossibleDoors = 2 * gameSize * (gameSize - 1);
+        s += "\n*  Max number possible doors: " + maxNumberPossibleDoors;
+        s += "\n*  Door density:" + (float)numDoors / (float)maxNumberPossibleDoors;
+
+        Debug.Log(s);
     }
 
     // Randomly adds a room at each possible intersection based on the specified % chance.
@@ -139,6 +168,51 @@ public class BoardManager : MonoBehaviour {
         return visited;
     }
 
+    // Given a list of connected rooms, returns the subset of those rooms that are adjacent to unconnected rooms.
+    List<Pair> GetFrontierRooms(List<Pair> reachableRoomsFromCenter) {
+        // First, get a list of all the unconnected rooms
+        List<Pair> allRooms = new List<Pair>();
+        for (int w = 0; w < gameSize; w++) {
+            for (int h = 0; h < gameSize; h++) {
+                allRooms.Add(new Pair(w, h));
+            }
+        }
+        List<Pair> unconnectedRooms = new List<Pair>();
+        foreach (Pair p in allRooms) {
+            if (!reachableRoomsFromCenter.Contains(p)) {
+                GetRoomFromIndex(p).TintFloor(Color.red); // debug
+                unconnectedRooms.Add(p);
+            }
+        }
+
+        List<Pair> frontierRooms = new List<Pair>();
+        // Now, compare each connected room to each unconnected room. If the connected room is one square from the unconnected, mark it as frontier.
+        foreach (Pair connectedRoom in reachableRoomsFromCenter) {
+            foreach (Pair unconnectedRoom in unconnectedRooms) {
+                if (RoomsAreAdjacent(connectedRoom, unconnectedRoom)) {
+                    frontierRooms.Add(connectedRoom);
+                    break;
+                }
+            }
+        }
+        // Debug
+        Debug.Log(frontierRooms.Count + " frontier rooms:");
+        foreach (Pair r in frontierRooms) {
+            Debug.Log(r.ToString());
+        }
+        return frontierRooms;
+    }
+
+    // Rooms are adjacent if their coords have either the w / h element exactly 1 apart from each other,
+    // and the other the same.
+    bool RoomsAreAdjacent(Pair roomA, Pair roomB) {
+        if (roomA.w == roomB.w) {
+            return (Mathf.Abs(roomA.h - roomB.h) == 1);
+        } else if (roomA.h == roomB.h) {
+            return (Mathf.Abs(roomA.w - roomB.w) == 1);
+        } else return false;
+    }
+
     // Adds random doors to random rooms in the list of room indices.
     // Returns false if none possible.
     bool AddRandomDoors(List<Pair> roomIndices, int numDoorsToAdd) {
@@ -182,12 +256,6 @@ public class BoardManager : MonoBehaviour {
         return result;
     }
 
-    // Get a random room in the game.
-    public Room RandomRoom() {
-        int x = GameManager.instance.prng.Next(0, gameSize);
-        int y = GameManager.instance.prng.Next(0, gameSize);
-        return rooms[x,y];
-    }
 
     // Get a inner room index.
     Pair GetRandomInnerRoomIndex() {
@@ -268,6 +336,7 @@ public class BoardManager : MonoBehaviour {
         baseRoom.AddDoor(doorToAdd);
         otherRoom.AddDoor(otherDoorToAdd);
         Debug.Log("Added door from " + roomIndex.ToString() + " to " + otherRoomIndex.ToString());
+        numDoors++;
         return true;
     }
 
