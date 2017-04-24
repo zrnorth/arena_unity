@@ -18,7 +18,7 @@ public class BoardManager : MonoBehaviour {
 
     private Room[,] rooms;
     private Room centerRoom;
-    private Pair centerRoomIndex;
+    private Pair centerRoomCoords;
     private Transform boardHolder;
 
     //debug
@@ -46,14 +46,14 @@ public class BoardManager : MonoBehaviour {
         }
 
         // Set one room as the "center" or root room. Can't be a room on the outer edge.
-        centerRoomIndex = new Pair(GameManager.instance.prng.Next(1, gameSize - 1), 
+        centerRoomCoords = new Pair(GameManager.instance.prng.Next(1, gameSize - 1), 
                                    GameManager.instance.prng.Next(1, gameSize - 1));
-        centerRoom = GetRoomFromCoords(centerRoomIndex);
+        centerRoom = GetRoomFromCoords(centerRoomCoords);
         centerRoom.TintFloor(Color.black); // debug
 
         // The center room should have doors on all four sides
-        AddDoorsToRoom(centerRoomIndex, new HashSet<Room.Door> { Room.Door.Top, Room.Door.Left, Room.Door.Bot, Room.Door.Right });
-        Debug.Log("Center room: " + centerRoomIndex);
+        AddDoorsToRoom(centerRoomCoords, new HashSet<Room.Door> { Room.Door.Top, Room.Door.Left, Room.Door.Bot, Room.Door.Right });
+        Debug.Log("Center room: " + centerRoomCoords);
 
         // Do a pass over the board, adding rooms by % chance
         PopulateBoardWithRandomDoors();
@@ -91,7 +91,7 @@ public class BoardManager : MonoBehaviour {
 
     // Ensures that all the rooms have a path to the center.
     void ConnectAllDoorsToCenter() {
-        List<Pair> reachableRoomsFromCenter = GetAllReachableRoomIndices(centerRoomIndex);
+        List<Pair> reachableRoomsFromCenter = GetAllReachableRoomCoords(centerRoomCoords);
         List<Pair> frontierRooms = new List<Pair>();
         List<Pair> outskirtRooms = new List<Pair>();
         int numRooms = gameSize * gameSize;
@@ -108,7 +108,7 @@ public class BoardManager : MonoBehaviour {
                 break;
             }
             // Regenerate the frontiers for the next pass
-            reachableRoomsFromCenter = GetAllReachableRoomIndices(centerRoomIndex);
+            reachableRoomsFromCenter = GetAllReachableRoomCoords(centerRoomCoords);
         }
     }
 
@@ -199,8 +199,8 @@ public class BoardManager : MonoBehaviour {
         Debug.Log(s);
     }
 
-    // Returns a list of all reachable rooms from a given room index.
-    List<Pair> GetAllReachableRoomIndices(Pair start) {
+    // Returns a list of all reachable rooms from a given room coords.
+    List<Pair> GetAllReachableRoomCoords(Pair start) {
         List<Pair> visited = new List<Pair>();
         Queue<Pair> q = new Queue<Pair>();
         q.Enqueue(start);
@@ -217,7 +217,7 @@ public class BoardManager : MonoBehaviour {
             visited.Add(coords);
 
             Room queuedRoom = GetRoomFromCoords(coords);
-            if (coords != centerRoomIndex) {
+            if (coords != centerRoomCoords) {
                 queuedRoom.TintFloor(Color.green); // debug, Tint as you go
             }
 
@@ -305,7 +305,7 @@ public class BoardManager : MonoBehaviour {
             // Get the room to add the random door to.
             Pair room = roomCoords[GameManager.instance.prng.Next(0, roomCoords.Count)];
             // Get the random door from the list of possible doors to add. If none possible, remove it from the
-            // list of room indices and try again
+            // list of room coords and try again
             HashSet<Room.Door> possibleNewDoors = GetPossibleNewDoors(room.w, room.h);
             if (possibleNewDoors.Count == 0) {
                 roomCoords.Remove(room);
@@ -321,12 +321,6 @@ public class BoardManager : MonoBehaviour {
             }
         }
         return true;
-    }
-
-    // Get a inner room index.
-    Pair GetRandomInnerRoomIndex() {
-        return new Pair(GameManager.instance.prng.Next(1, gameSize - 1),
-                        GameManager.instance.prng.Next(1, gameSize - 1));
     }
     
     // Creates a new GameObject with the Room script attached, and runs the Setup script in Room.
@@ -399,9 +393,9 @@ public class BoardManager : MonoBehaviour {
     }
 
     // helper to add a multiple doors at once
-    bool AddDoorsToRoom(Pair roomIndex, HashSet<Room.Door> doorsToAdd) {
+    bool AddDoorsToRoom(Pair roomCoords, HashSet<Room.Door> doorsToAdd) {
         foreach (Room.Door doorToAdd in doorsToAdd) {
-            bool succeeded = AddDoorToRoom(roomIndex, doorToAdd);
+            bool succeeded = AddDoorToRoom(roomCoords, doorToAdd);
             if (!succeeded) {
                 return false;
             }
